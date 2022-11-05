@@ -59,7 +59,7 @@ void readFile(const std::string &path, std::vector<std::string> &buffer) {
 
 bool match(const std::vector<uint16_t> &letters, short unsigned int word[26]) {
     for(size_t i = 0; i < 26; i++) {
-        if((letters[i] - word[i]) < 0) {
+        if(letters[i] < word[i]) {
             return false;
         }
     }
