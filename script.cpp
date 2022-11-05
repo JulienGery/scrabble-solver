@@ -12,14 +12,14 @@
 auto convertStrToRepresentation(const std::string &str) {
     uint32_t rp = 0;
     for(const auto &i : str){
-        rp |= 0x80000000 >> (i - 'a');
+        rp |= 0x80000000 >> (i - 'A');
     }
     return rp;
 }
 
 void readFile(const std::string &path, std::vector<std::string> &buffer) {
     std::ifstream file{path};
-    if (!file.is_open()) throw std::runtime_error("failed to open file " + path);
+    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file: " + path + "\033[0m");
     std::copy(
         std::istream_iterator<std::string>(file),
         std::istream_iterator<std::string>(),
@@ -30,7 +30,7 @@ void readFile(const std::string &path, std::vector<std::string> &buffer) {
 
 template<class t>
 void writeFile(const std::string &path, std::vector<t> &buffer) {
-    assert(buffer.size() > 0 && "no data to write");
+    assert(buffer.size() > 0 && "\033[1;31mNo data to write\033[0m");
 
     std::ofstream out(path, std::ios::binary | std::ios::out);
     out.write((char *)&buffer[0], buffer.size() * sizeof(t));
@@ -38,7 +38,7 @@ void writeFile(const std::string &path, std::vector<t> &buffer) {
 }
 
 void writeFile(const std::string &path, std::vector<std::string> &buffer) {
-    assert(buffer.size() > 0 && "no data to write");
+    assert(buffer.size() > 0 && "\033[1;31mNo data to write\033[0m");
 
     std::ofstream out(path, std::ios::out);
     std::ostream_iterator<std::string> output_iterator(out, "\n");
@@ -87,21 +87,23 @@ void apply_permutation_in_place(
     }
 }
 
-int main() {
-    std::map<char, uint16_t> values{{'a', 1},{'b', 3},{'c', 3},{'d', 2},{'e', 1}, {'f', 4}, {'g', 2}, {'h', 4}, {'i', 1}, {'j', 8}, {'k', 10}, {'l', 1}, {'m', 2}, {'n', 1}, {'o', 1}, {'p', 3}, {'q', 8}, {'r', 1}, {'s', 1}, {'t', 1}, {'u', 1}, {'v', 4}, {'w', 10},{'x', 10}, {'y', 10}, {'z', 10}};
+int main(int argc, char* argv[]) {
+    if(argc != 2) throw std::runtime_error("\033[1;31mGive a file!\033[0m");
+    
+    std::map<char, uint16_t> values{{'A', 1},{'B', 3},{'C', 3},{'D', 2},{'E', 1}, {'F', 4}, {'G', 2}, {'H', 4}, {'I', 1}, {'J', 8}, {'K', 10}, {'L', 1}, {'M', 2}, {'N', 1}, {'O', 1}, {'P', 3}, {'Q', 8}, {'R', 1}, {'S', 1}, {'T', 1}, {'U', 1}, {'V', 4}, {'W', 10},{'X', 10}, {'Y', 10}, {'Z', 10}};
 
     std::vector<std::string> words;
-    readFile("fr.txt", words);
+    readFile(argv[1], words);
 
     const size_t lines = words.size();
-    std::vector<uint32_t> strRepresentation(lines, 0);
+    std::vector<uint32_t> WBRp(lines, 0);
     std::vector<uint16_t> sizes(lines);
     std::vector<uint16_t> points(lines);
 
     for (size_t i = 0; i < words.size(); i++) {
         const auto &word = words[i];
         sizes[i] = word.size();
-        strRepresentation[i] = convertStrToRepresentation(word);
+        WBRp[i] = convertStrToRepresentation(word);
         
         uint16_t point = 0;
         for(const auto &letter : word) {
@@ -117,11 +119,11 @@ int main() {
     apply_permutation_in_place(points, p);
     apply_permutation_in_place(words, p);
     apply_permutation_in_place(sizes, p);
-    apply_permutation_in_place(strRepresentation, p);
+    apply_permutation_in_place(WBRp, p);
 
 
     writeFile("wordsSorted.txt", words);
-    writeFile("WBRp.bin", strRepresentation);
+    writeFile("WBRp.bin", WBRp);
     writeFile("lengths.bin", sizes);
     writeFile("points.bin", points);
 
