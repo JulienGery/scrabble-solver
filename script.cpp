@@ -99,6 +99,7 @@ int main(int argc, char* argv[]) {
     std::vector<uint32_t> WBRp(lines, 0);
     std::vector<uint16_t> sizes(lines);
     std::vector<uint16_t> points(lines);
+    std::vector<uint16_t[26]> jsp(lines);
 
     for (size_t i = 0; i < words.size(); i++) {
         const auto &word = words[i];
@@ -108,6 +109,7 @@ int main(int argc, char* argv[]) {
         uint16_t point = 0;
         for(const auto &letter : word) {
             point += values[letter];
+            jsp[i][letter - 'A']++;
         }
         points[i] = point;
     }
@@ -120,11 +122,11 @@ int main(int argc, char* argv[]) {
     apply_permutation_in_place(words, p);
     apply_permutation_in_place(sizes, p);
     apply_permutation_in_place(WBRp, p);
-
+    apply_permutation_in_place(jsp, p);
 
     writeFile("wordsSorted.txt", words);
     writeFile("WBRp.bin", WBRp);
     writeFile("lengths.bin", sizes);
     writeFile("points.bin", points);
-
+    writeFile("jsp.bin", jsp);
 }

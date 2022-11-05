@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <map>
 #include <chrono>
 #include <iterator>
 
@@ -17,9 +16,9 @@ auto convertStrToRepresentation(const std::string &str) {
     return rp;
 }
 
-auto createMap(const std::string & letters, std::map<char, int16_t> &buffer) {
-    for (const auto &i : letters) {
-        buffer[i]++;
+auto aa(const std::string &letters, std::vector<uint16_t> &buffer) {
+    for(const auto &i : letters) {
+        buffer[i - 'A']++;
     }
 }
 
@@ -27,7 +26,7 @@ auto createMap(const std::string & letters, std::map<char, int16_t> &buffer) {
 template<class t>
 void readFile(const std::string &path, std::vector<t> &buffer) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file " + path);
+    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file " + path + "\033[0m");
 
     const size_t size = file.tellg();
     buffer.resize(size/sizeof(t));
@@ -36,9 +35,19 @@ void readFile(const std::string &path, std::vector<t> &buffer) {
     file.close();
 }
 
+void readFile(const std::string &path, std::vector<uint16_t[26]> &buffer) {
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file " + path + "\033[0m");
+
+    const size_t size = file.tellg();
+    file.seekg(0);
+    file.read((char *) buffer.data(), size);
+    file.close();
+}
+
 void readFile(const std::string &path, std::vector<std::string> &buffer) {
     std::ifstream file{path};
-    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file " + path);
+    if (!file.is_open()) throw std::runtime_error("\033[1;31mFailed to open file " + path + "\033[0m");
 
     std::copy(
         std::istream_iterator<std::string>(file),
@@ -48,10 +57,9 @@ void readFile(const std::string &path, std::vector<std::string> &buffer) {
     file.close();
 }
 
-bool match(std::map<char, int16_t> letters, const std::string &word) {
-    for (const auto &letter : word) {
-        letters[letter]--;
-        if(letters[letter] < 0) {
+bool match(const std::vector<uint16_t> &letters, short unsigned int word[26]) {
+    for(size_t i = 0; i < 26; i++) {
+        if((letters[i] - word[i]) < 0) {
             return false;
         }
     }
@@ -59,25 +67,28 @@ bool match(std::map<char, int16_t> letters, const std::string &word) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) throw std::runtime_error("\033[1;31mGive letters!");
+    if (argc != 2) throw std::runtime_error("\033[1;31mGive letters!\033[0m");
 
     std::vector<uint32_t> WBRp;
     readFile("WBRp.bin", WBRp);
     std::vector<uint16_t> sizes;
     readFile("lengths.bin", sizes);
     std::vector<std::string> words;
-    readFile("wordsSorted.txt", words);    
-    std::vector<uint16_t> points;
-    readFile("points.bin", points);
+    readFile("wordsSorted.txt", words);
+    std::vector<uint16_t[26]> jsp(words.size()); //size must be set at init time
+    readFile("jsp.bin", jsp);
 
 
     auto letters = std::string(argv[1]); //vteafsjxdr
     std::transform(letters.begin(), letters.end(), letters.begin(), ::toupper);
     const uint16_t length = letters.size();
     const auto representation = convertStrToRepresentation(letters);
+    std::vector<uint16_t> word(26);
+    aa(letters, word);
 
     size_t eligible = 0;
     std::vector<size_t> indexes(sizes.size());
+    
     const auto start = std::chrono::high_resolution_clock::now();
     
     for (size_t i = 0; i < sizes.size(); i++) {
@@ -89,14 +100,10 @@ int main(int argc, char* argv[]) {
 
     indexes.resize(eligible);
 
-    std::map<char, int16_t> word;
-    createMap(letters, word);
-
     size_t valid = 0;
     std::vector<size_t> finalIndexes(eligible);
-    
     for(const auto &index : indexes) {
-        if (match(word, words[index])) {
+        if (match(word, jsp[index])) {
             finalIndexes[valid] = index;
             valid++;
         }
@@ -107,10 +114,10 @@ int main(int argc, char* argv[]) {
     const auto end = std::chrono::high_resolution_clock::now();
     const auto delta = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
-    std::cout << "\033[36m" << delta.count() << " nanoseconds \033[1;36mwithout accounting for reading files\n\033[0m";
-    std::cout << "\033[32m" << valid << " valids words\n";
+    std::cout << "\033[36m" << delta.count() << " nanoseconds \033[1;36mwithout accounting for files reading\n\033[0m";
+    std::cout << "\033[32m" << valid << " valids words\n\033[0m";
 
-    // for(const auto &index : finalIndexes) { 
+    // for(const auto &index : finalIndexes) {
     //     std::cout << words[index] << '\t'; 
     // }
 }
