@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <boost/algorithm/string/erase.hpp>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -6,6 +7,7 @@
 #include <vector>
 #include <chrono>
 #include <iterator>
+#include <boost/algorithm/string.hpp>
 
 
 auto convertStrToRepresentation(const std::string &str) {
@@ -16,7 +18,7 @@ auto convertStrToRepresentation(const std::string &str) {
     return rp;
 }
 
-auto aa(const std::string &letters, std::vector<uint16_t> &buffer) {
+auto getLettersCount(const std::string &letters, std::vector<uint16_t> &buffer) {
     for(const auto &i : letters) {
         buffer[i - 'A']++;
     }
@@ -57,10 +59,14 @@ void readFile(const std::string &path, std::vector<std::string> &buffer) {
     file.close();
 }
 
-bool match(const std::vector<uint16_t> &letters, short unsigned int word[26]) {
+bool match(const std::vector<uint16_t> &letters, short unsigned int word[26], int16_t jokerCount) {
     for(size_t i = 0; i < 26; i++) {
-        if(letters[i] < word[i]) {
-            return false;
+        const auto tmp = letters[i] - word[i];
+        if(tmp < 0) {
+            jokerCount += tmp;
+            if(jokerCount < 0) {
+                return false;
+            }
         }
     }
     return true;
@@ -75,16 +81,18 @@ int main(int argc, char* argv[]) {
     readFile("lengths.bin", sizes);
     std::vector<std::string> words;
     readFile("wordsSorted.txt", words);
-    std::vector<uint16_t[26]> jsp(words.size()); //size must be set at init time
-    readFile("jsp.bin", jsp);
+    std::vector<uint16_t[26]> lettersCount(words.size()); //size must be set at init time
+    readFile("lettersCount.bin", lettersCount);
 
 
     auto letters = std::string(argv[1]); //vteafsjxdr
-    std::transform(letters.begin(), letters.end(), letters.begin(), ::toupper);
     const uint16_t length = letters.size();
+    boost::erase_all(letters, "?");
+    const int16_t jokerCount = length - letters.size();
+    std::transform(letters.begin(), letters.end(), letters.begin(), ::toupper);
     const auto representation = convertStrToRepresentation(letters);
     std::vector<uint16_t> word(26);
-    aa(letters, word);
+    getLettersCount(letters, word);
 
     size_t eligible = 0;
     std::vector<size_t> indexes(sizes.size());
@@ -92,9 +100,18 @@ int main(int argc, char* argv[]) {
     const auto start = std::chrono::high_resolution_clock::now();
     
     for (size_t i = 0; i < sizes.size(); i++) {
-        if ((!(~(~WBRp[i] | representation))) && (length >= sizes[i])){
-            indexes[eligible] = i;
-            eligible++;
+        if (length >= sizes[i]) {
+            uint32_t jsp = ~(~WBRp[i] | representation);
+            size_t a = 0;
+            while(jsp!=0 && jokerCount < a){
+                    a++;
+                    jsp &= (jsp-1);
+            }
+
+            if (!jsp){
+                indexes[eligible] = i;
+                eligible++;
+            }
         }
     }
 
@@ -103,7 +120,7 @@ int main(int argc, char* argv[]) {
     size_t valid = 0;
     std::vector<size_t> finalIndexes(eligible);
     for(const auto &index : indexes) {
-        if (match(word, jsp[index])) {
+        if (match(word, lettersCount[index], jokerCount)) {
             finalIndexes[valid] = index;
             valid++;
         }
