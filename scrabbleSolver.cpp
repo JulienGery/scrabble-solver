@@ -84,7 +84,6 @@ int main(int argc, char* argv[]) {
     std::vector<uint16_t[26]> lettersCount(words.size()); //size must be set at init time
     readFile("lettersCount.bin", lettersCount);
 
-
     auto letters = std::string(argv[1]); //vteafsjxdr
     const uint16_t length = letters.size();
     boost::erase_all(letters, "?");
@@ -103,15 +102,14 @@ int main(int argc, char* argv[]) {
         if (length >= sizes[i]) {
             uint32_t jsp = ~(~WBRp[i] | representation);
             size_t a = 0;
-            while(jsp!=0 && jokerCount < a){
-                    a++;
-                    jsp &= (jsp-1);
-            }
-
-            if (!jsp){
-                indexes[eligible] = i;
-                eligible++;
-            }
+            for(size_t a = 0; a < jokerCount; a++){
+                jsp &= (jsp-1);
+                if (!jsp){
+                    indexes[eligible] = i;
+                    eligible++;
+                    break;
+                }
+            }            
         }
     }
 
