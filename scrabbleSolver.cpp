@@ -101,14 +101,13 @@ int main(int argc, char* argv[]) {
     for (size_t i = 0; i < sizes.size(); i++) {
         if (length >= sizes[i]) {
             uint32_t jsp = ~(~WBRp[i] | representation);
-            size_t a = 0;
-            for(size_t a = 0; a < jokerCount; a++){
-                jsp &= (jsp-1);
+            for(size_t a = 0; a < jokerCount+1; a++){
                 if (!jsp){
                     indexes[eligible] = i;
                     eligible++;
                     break;
                 }
+                jsp &= (jsp-1);
             }            
         }
     }
