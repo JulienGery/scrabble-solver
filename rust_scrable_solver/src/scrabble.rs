@@ -384,7 +384,7 @@ fn containe(a: StartEnd, b: &StartEnd) -> bool {
     return false;
 }
 
-fn find_best_word_ancors_helper(row: &[Letter], rotated_board: &Board<Letter>, start: usize, end: usize, ancor: &StartEnd, word: &str, word_index: usize, row_index: usize, is_collumn: bool, repertoire: &Repertoire, out: &mut Vec<Output>) {
+fn find_best_word_ancors_helper(row: &[Letter], rotated_board: &Board<Letter>, start: usize, end: usize, ancor: &StartEnd, word: &str, row_index: usize, is_collumn: bool, repertoire: &Repertoire, out: &mut Vec<Output>) {
     for i in start..=ancor.end {
         if i + word.len() > end {
             return;
@@ -398,7 +398,7 @@ fn find_best_word_ancors_helper(row: &[Letter], rotated_board: &Board<Letter>, s
     }
 }
 
-fn find_best_word_ancors(row: &[Letter], rotated_board: &Board<Letter>, groups: &Vec<LetterAndRange>, ancors: &Vec<StartEnd>, words: &Vec<&String>, words_indexes: &Vec<usize>, row_index: usize, is_collumn: bool, repertoire: &Repertoire, out: &mut Vec<Output>) {
+fn find_best_word_ancors(row: &[Letter], rotated_board: &Board<Letter>, groups: &Vec<LetterAndRange>, ancors: &Vec<StartEnd>, words: &Vec<&String>, row_index: usize, is_collumn: bool, repertoire: &Repertoire, out: &mut Vec<Output>) {
     let mut start = 0;
 
     let mut should_add_tow = false;
@@ -417,8 +417,9 @@ fn find_best_word_ancors(row: &[Letter], rotated_board: &Board<Letter>, groups: 
             let test = StartEnd { start, end: group.start };
             if containe(test, ancor) {
                 for i in 0..words.len() {
-                    find_best_word_ancors_helper(row, rotated_board, if should_add_tow {start + 2} else { start }, group.start - 1, ancor, words[i], words_indexes[i], row_index, is_collumn, repertoire, out);
+                    find_best_word_ancors_helper(row, rotated_board, if should_add_tow {start + 2} else { start }, group.start - 1, ancor, words[i], row_index, is_collumn, repertoire, out);
                 }
+                start = group.end;
                 continue 'ancors;
             }
             start = group.end;
@@ -426,7 +427,7 @@ fn find_best_word_ancors(row: &[Letter], rotated_board: &Board<Letter>, groups: 
 
         if containe(StartEnd { start, end: row.len() - 1 }, ancor) {
             for i in 0..words.len() {
-                find_best_word_ancors_helper(row, rotated_board, start + 2, row.len(), ancor, words[i], words_indexes[i], row_index, is_collumn, repertoire, out);
+                find_best_word_ancors_helper(row, rotated_board, start + 2, row.len(), ancor, words[i], row_index, is_collumn, repertoire, out);
             }
         }
     }
@@ -569,7 +570,7 @@ impl Scrabble {
     }
 
 
-    pub fn find_best_word(&self, letters: &str, joker_count: usize, repertoire: &Repertoire) -> Vec<usize> {
+    pub fn moves(&self, letters: &str, joker_count: usize, repertoire: &Repertoire) -> Vec<usize> {
 
         let groups = self.groups();
         let spaces = self.spaces(&groups);
@@ -577,8 +578,8 @@ impl Scrabble {
         let letters_on_board = self.letters(&groups);
         let ancors = self.ancors();
 
-        let words_indexes = repertoire.filter(letters, joker_count);
-        let words: Vec<&String> = words_indexes.iter().map(|i| &repertoire[*i]).collect();
+        let words = repertoire.filter(letters, joker_count);
+        let words: Vec<&String> = words.iter().map(|i| &repertoire[*i]).collect();
 
         let mut out = Vec::new();
 
@@ -588,8 +589,8 @@ impl Scrabble {
         }
 
         for i in 0..self.board.width {
-            find_best_word_ancors(&self.board[i], &self.rotated_board, &groups[i], &ancors[i], &words, &words_indexes, i, false, repertoire, &mut out);
-            find_best_word_ancors(&self.rotated_board[i], &self.board, &groups[i + self.board.width], &ancors[i + self.board.width], &words, &words_indexes, i, true, repertoire, &mut out);
+            find_best_word_ancors(&self.board[i], &self.rotated_board, &groups[i], &ancors[i], &words, i, false, repertoire, &mut out);
+            find_best_word_ancors(&self.rotated_board[i], &self.board, &groups[i + self.board.width], &ancors[i + self.board.width], &words, i, true, repertoire, &mut out);
         }
 
         out.sort_unstable_by(|a, b| b.word.point.partial_cmp(&a.word.point).unwrap());

@@ -9,7 +9,7 @@ fn main() {
         let args: Vec<String> = std::env::args().collect();
         let _timer = timer::Timer::new("total");
         // let letters = "XAVIER";
-        let letters = &args[1];
+        let letters = &args[1].to_uppercase();
         let jocker_count = 0;
 
         let repertoire;
@@ -22,7 +22,7 @@ fn main() {
         scrabble.print();
         {
             let _timer = timer::Timer::new("find best word");
-            scrabble.find_best_word(letters, jocker_count, &repertoire);
+            scrabble.moves(letters, jocker_count, &repertoire);
         }
     }
 }

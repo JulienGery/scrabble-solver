@@ -3,7 +3,6 @@ use std::{
     ops,
     collections::hash_set::HashSet,
 };
-
 use crate::pattern::Pattern;
 
 pub struct Repertoire {
@@ -164,7 +163,6 @@ impl Repertoire {
 
     pub fn advance_filter(&self, letters: &str, jocker_count: usize, regexes: &Vec<Pattern>, letters_on_board: &Vec<String>) -> WordsAndRegexResult {
 
-
         let n = letters_on_board.len();
         let mut sizes = vec![0; n * (n + 1) / 2];
         let mut letters_bags: Vec<u8> = vec![0; n * (n + 1) / 2 * 26];
@@ -211,9 +209,7 @@ impl Repertoire {
         }
 
         let mut valide = 0;
-
         let mut regex_resultes = Vec::with_capacity(ret.len());
-
         for i in 0..ret.len() {
             let index = ret[i];
             for j in 0..regexes.len() {
